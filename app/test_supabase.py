@@ -1,15 +1,40 @@
+"""
+NEXO Data Platform - Supabase Connection Test Script
+Tests client initialization safely without exposing secrets or crashing on Windows cp1252.
+"""
+
+import sys
 import os
+
+# Add project root to sys.path to allow running from any working directory
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
+
 from dotenv import load_dotenv
-from supabase import create_client
+from config.supabase_client import get_supabase_client, check_connection
+from config.settings import get_settings
 
 load_dotenv()
 
-supabase_url = os.getenv("SUPABASE_URL")
-supabase_key = os.getenv("SUPABASE_PUBLISHABLE_KEY")
 
-if not supabase_url or not supabase_key:
-    raise ValueError("Supabase credentials missing in .env")
+def main():
+    print("[NEXO] Initializing Supabase client test...")
+    try:
+        settings = get_settings()
+        # Test client initialization
+        client = get_supabase_client()
+        health = check_connection()
 
-supabase = create_client(supabase_url, supabase_key)
+        # Use ASCII arrow -> instead of unicode \u2192 to avoid Windows cp1252 charmap errors
+        print(f"[NEXO] -> Supabase connection initialized successfully!")
+        print(f"[NEXO] -> Target URL: {health.get('supabase_url')}")
+        print(f"[NEXO] -> Client status: {health.get('status')}")
+        print(f"[NEXO] -> Environment: {settings.environment}")
+    except Exception as exc:
+        print(f"[NEXO] Connection test failed: {exc}", file=sys.stderr)
+        sys.exit(1)
 
-print("NEXO → Supabase connection initialized successfully!")
+
+if __name__ == "__main__":
+    main()

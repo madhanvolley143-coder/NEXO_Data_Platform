@@ -1,2 +1,5 @@
 supabase
 python-dotenv
+pypdf
+beautifulsoup4
+python-docx
